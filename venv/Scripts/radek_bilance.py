@@ -27,13 +27,15 @@ pair = 'BTC/USDT'
 
 # Load OHLCV (open/high/low/close/volume) data with 1-day resolution
 ohlcv = binance.fetch_ohlcv(pair, '1d')
+print("ohlcv: ", ohlcv)
 
 # Get closing prices for each day
 prices = [x[4] for x in ohlcv]
+print("prices: ", prices)
 
 # Convert Unix timestamps to Python dates
 dates = [datetime.utcfromtimestamp(x[0] // 1000) for x in ohlcv]
-# print('dates: ', dates)
+print('dates: ', dates)
 
 # Prepare a Pandas series object
 data = pd.Series (prices, index=dates)
