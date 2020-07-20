@@ -23,7 +23,7 @@ plt.rcParams["figure.figsize"] = [15,6]
 import pandas as pd
 from datetime import datetime
 
-pair = 'ETH/USDT'
+pair = 'BTC/USDT'
 
 # Load OHLCV (open/high/low/close/volume) data with 1-day resolution
 ohlcv = binance.fetch_ohlcv(pair, '1d')
