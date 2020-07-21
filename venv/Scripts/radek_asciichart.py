@@ -61,4 +61,4 @@ def pplot(series, cfg={}):
 if __name__ == '__main__':
     width = 60
     series = [10 * cos(i * ((pi * 3) / width)) for i in range(width)]
-    print(plot(series))
+    print(pplot(series))

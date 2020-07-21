@@ -4,6 +4,9 @@ from matplotlib import pyplot as plt
 # %matplotlib inline
 
 data = np.load('mackey_glass_t17.npy') #  http://minds.jacobs-university.de/mantas/code
+print("type data: ", type(data))
+print("data: ", data)
+print("Délka dat: ", len(data))
 esn = ESN(n_inputs = 1,
           n_outputs = 1,
           n_reservoir = 500,
