@@ -11,12 +11,15 @@ Predikce ESN dat a uložení do databáze
 Zobrazení dat
 
 """
-
+import os
+import sys
 import psycopg2
 from config import config
 
+root = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+sys.path.append(root + '/python')
 
-def insert_postgreSQL_ticker(lenData)
+def select_postgreSQL_ticker(lenData):
     """ Connect to the PostgreSQL tab tisker and read Data (number: lenData) """
     conn = None
     try:
@@ -27,11 +30,10 @@ def insert_postgreSQL_ticker(lenData)
         # create a cursor
         cur = conn.cursor()
 
-        sql_max_row_tab = ("SELECT count(*) FROM ticker;")
-        result = cur.execute(sql_max_row_tab)
+        cur.execute("SELECT count(*) FROM ticker")  # počet řádků tabulky ticker
+        result = cur.fetchone()
         max_row_tab = result[0]
         print("max_row_tab: ", max_row_tab)
-        conn.commit()
         cur.close()
 
     except (Exception, psycopg2.DatabaseError) as error:
@@ -39,7 +41,13 @@ def insert_postgreSQL_ticker(lenData)
     finally:
         if conn is not None:
             conn.close()
-            # print('Database connection closed.')
+            #print('Database connection closed.')
 
     return
 
+
+if __name__ == '__main__':
+    id = 'binance'
+    symbol = 'BTC/USDT'
+    lenData = 10000
+    select_postgreSQL_ticker(lenData)
