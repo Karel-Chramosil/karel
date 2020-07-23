@@ -180,14 +180,17 @@ def read_tickers(id, symbol):
             ticker_dic = asyncio.get_event_loop().run_until_complete(test(id, symbol))
             # pprint(ticker_dic)
             insert_postgreSQL_ticker(ticker_dic)
-            insert_postgreSQL_info(ticker_dic)
+            # insert_postgreSQL_info(ticker_dic)
             if j < width:
                 j = j + 1
             else:
                 series.pop(0)
             series.append(ticker_dic['bid'])
-            print(colored(radek_asciichart.pplot(series), 'blue'))
-            print(colored('****************************** bid *******************************************', 'yellow'))
+            print("\n")
+            print(colored(radek_asciichart.pplot(series), 'yellow'))
+            #print((radek_asciichart.pplot(series)))
+            print(colored('bid => ₿ = $ ','blue'), ticker_dic['bid'])
+            print("\n")
     except Exception as e:
         print('Error: ', e)
     finally:
