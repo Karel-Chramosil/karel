@@ -33,8 +33,9 @@ exchange = ccxt.binance({
 # -----------------------------------------------------------------------------
 
 # from_datetime = '2017-01-01 00:00:00'
-from_datetime = '2020-06-01 00:00:00'
+from_datetime = '2020-07-23 00:00:00'
 from_timestamp = exchange.parse8601(from_datetime)
+# print("from_timestamp: ", from_timestamp)
 
 # -----------------------------------------------------------------------------
 
