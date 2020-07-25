@@ -3,6 +3,8 @@
 import os
 import sys
 import time
+import psycopg2
+from config import config
 
 # -----------------------------------------------------------------------------
 
@@ -21,6 +23,7 @@ def read_ohlcv(symbol):
     try:
         # binance
         # bitfinex
+
         exchange = ccxt.binance({
             'rateLimit': 10000,
             'enableRateLimit': True,
@@ -29,7 +32,7 @@ def read_ohlcv(symbol):
         print("exchange: ", exchange)
 
         # from_datetime = '2017-01-01 00:00:00'
-        from_datetime = '2020-07-23 00:00:00'
+        from_datetime = '2017-01-01 00:00:00'
         from_timestamp = exchange.parse8601(from_datetime)
         #
         # print("from_timestamp: ", from_timestamp)
@@ -70,9 +73,10 @@ def read_ohlcv(symbol):
                 # from_timestamp += len(ohlcvs) * minute * 5  # very bad
                 from_timestamp = ohlcvs[-1][0] + minute * 5  # good
                 data += ohlcvs
-                print('Len data : ', len(data))
-                print('Data: #####', data, '######')
-
+                # print('Len data : ', len(data))
+                # print('Data: #####', data, '######')
+                # insert_postgreSQL_ohlcv(data)
+                data = []
 
         except (ccxt.ExchangeError, ccxt.AuthenticationError, ccxt.ExchangeNotAvailable, ccxt.RequestTimeout) as error:
             print('Got an error', type(error).__name__, error.args, ', retrying in', hold, 'seconds...')
@@ -82,6 +86,41 @@ def read_ohlcv(symbol):
 
     return
 
+    # -----------------------------------------------------------------------------
+
+def insert_postgreSQL_ohlcv(data):
+    """ Connect to the PostgreSQL database server """
+    conn = None
+    try:
+        # read connection parameters
+        params = config()
+        conn = psycopg2.connect(**params)
+
+        # create a cursor
+        cur = conn.cursor()
+
+        i = 0
+        while i <= len(data):
+            data_ohlcv = (data[i][0], data[i][1], data[i][2], data[i][3], data[i][4], data[i][5])
+            print(data_ohlcv)
+            sql_ohlcv = ("INSERT INTO ohlcv (timestamp, open, high, low, close, volume) VALUES (%s, %s, %s, %s, %s, %s) ;")
+            cur.execute(sql_ohlcv, data_ohlcv)
+            conn.commit()
+            i = i + 1
+
+        cur.close()
+
+    except (Exception, psycopg2.DatabaseError) as error:
+        print(error)
+    finally:
+        if conn is not None:
+           conn.close()
+           print('Database connection closed.')
+
+    return
+
+    # -----------------------------------------------------------------------------
+
 if __name__ == '__main__':
     # -----------------------------------------------------------------------------
     # common constants
@@ -89,4 +128,6 @@ if __name__ == '__main__':
     symbol = 'BTC/USDT'
 
     # -----------------------------------------------------------------------------
-    data = read_ohlcv(symbol)
+    read_ohlcv(symbol)
+
+
