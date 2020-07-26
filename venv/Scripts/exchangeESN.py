@@ -16,6 +16,19 @@ import sys
 import psycopg2
 from config import config
 
+
+import matplotlib.pyplot as plt
+# %config InlineBackend.figure_format = 'retina'
+from IPython.display import set_matplotlib_formats
+set_matplotlib_formats('retina')
+
+plt.style.use ('seaborn-white')
+plt.rcParams["figure.figsize"] = [15,6]
+
+import pandas as pd
+from datetime import datetime
+
+
 root = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 sys.path.append(root + '/python')
 
@@ -30,10 +43,15 @@ def select_postgreSQL_ticker(lenData):
         # create a cursor
         cur = conn.cursor()
 
-        cur.execute("SELECT count(*) FROM ticker")  # počet řádků tabulky ticker
+        cur.execute("SELECT count(*) FROM ohlcv")  # počet řádků tabulky ticker
         result = cur.fetchone()
         max_row_tab = result[0]
         print("max_row_tab: ", max_row_tab)
+
+        cur.execute("SELECT to_date(timestamp), close FROM ohlcv "
+                    "ORDER BY timestamp ASC")
+        records = cur.fetchall()
+
         cur.close()
 
     except (Exception, psycopg2.DatabaseError) as error:
@@ -43,11 +61,24 @@ def select_postgreSQL_ticker(lenData):
             conn.close()
             #print('Database connection closed.')
 
-    return
+    return records
 
+
+def dataplot(records):
+    print("Total rows are:  ", len(records))
+    print("Printing each row")
+    print("\n")
+    prices = [row[1] for row in records]
+    print("prices: ", prices)
+    # dates = [datetime.fromtimestamp(row[0] // 1000) for row in records]  # místní čas
+    dates = [row[0] for row in records]  # místní čas
+    print('dates: ', dates)
+
+    return
 
 if __name__ == '__main__':
     id = 'binance'
     symbol = 'BTC/USDT'
     lenData = 10000
-    select_postgreSQL_ticker(lenData)
+    records = select_postgreSQL_ticker(lenData)
+    dataplot(records)
