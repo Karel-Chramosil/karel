@@ -24,6 +24,8 @@ from IPython.display import set_matplotlib_formats
 import pandas as pd
 from datetime import datetime
 
+import numpy as np
+from pyESN import ESN
 
 root = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 sys.path.append(root + '/python')
@@ -84,9 +86,60 @@ def dataplot(records):
 
     return
 
+def dataprediction(records):
+    rng = np.random.RandomState(42)
+    esn = ESN(n_inputs = 1,
+              n_outputs = 1,
+              n_reservoir = 1000,
+              spectral_radius = 0.25,
+              sparsity = 0.95,
+              noise = 0.001,
+              # input_shift = [0, 0],
+              input_shift = [0],
+              # input_scaling = [0.01, 3],
+              # input_scaling = [0.01],
+              teacher_scaling = 1.12,
+              teacher_shift = -0.7,
+              out_activation = np.tanh,
+              inverse_out_activation = np.arctanh,
+              random_state = rng,
+              silent = False
+              )
+
+    prices = [float(row[1]) for row in records]
+    print("prices: ", prices)
+    max_price = max(prices)
+    min_price = min(prices)
+    print("max_price: ", max_price, "   min_price: ", min_price)
+    norma_prices = []
+    for x in prices:
+        norma_prices.append(x/(max_price + min_price))
+    print("norma_prices: ", norma_prices)
+    # Prepare a Pandas series object
+    data = np.array(norma_prices)
+    print('data: ', data)
+
+    trainlen = 25000
+    future = 10
+    pred_training = esn.fit(np.ones(trainlen), data[:trainlen])
+
+    prediction = esn.predict(np.ones(future))
+    print("test error: \n" + str(np.sqrt(np.mean((prediction.flatten() - data[trainlen:trainlen + future]) ** 2)) * 100), "%")
+
+    plt.figure(figsize=(11, 1.5))
+    plt.plot(range(0, trainlen + future), data[0:trainlen + future], 'k', label="target system")
+    plt.plot(range(trainlen, trainlen + future), prediction, 'r', label="free running ESN")
+    lo, hi = plt.ylim()
+    plt.plot([trainlen, trainlen], [lo + np.spacing(1), hi - np.spacing(1)], 'k:')
+    plt.legend(loc=(0.61, 1.1), fontsize='x-small')
+    plt.show()
+
+    return
+
 if __name__ == '__main__':
     id = 'binance'
     symbol = 'BTC/USDT'
     lenData = 10000
     records = select_postgreSQL_ticker(lenData)
-    dataplot(records)
+    # dataplot(records)
+    dataprediction(records)

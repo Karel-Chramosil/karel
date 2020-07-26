@@ -213,7 +213,7 @@ class ESN():
         pred_train = self._unscale_teacher(self.out_activation(
             np.dot(extended_states, self.W_out.T)))
         if not self.silent:
-            print(np.sqrt(np.mean((pred_train - outputs)**2)))
+            print(np.sqrt(np.mean((pred_train - outputs)**2))*100, "%")
         return pred_train
 
     def predict(self, inputs, continuation=True):
