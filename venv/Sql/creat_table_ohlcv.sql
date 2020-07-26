@@ -1,6 +1,6 @@
 create table ohlcv
 (
-    timestamp  TIMESTAMP WITH TIME ZONE not null
+    timestamp  BIGINT not null
         constraint ohlcv_pkey
             primary key,
     open      numeric(8, 2),

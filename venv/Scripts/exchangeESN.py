@@ -20,10 +20,6 @@ from config import config
 import matplotlib.pyplot as plt
 # %config InlineBackend.figure_format = 'retina'
 from IPython.display import set_matplotlib_formats
-set_matplotlib_formats('retina')
-
-plt.style.use ('seaborn-white')
-plt.rcParams["figure.figsize"] = [15,6]
 
 import pandas as pd
 from datetime import datetime
@@ -48,8 +44,7 @@ def select_postgreSQL_ticker(lenData):
         max_row_tab = result[0]
         print("max_row_tab: ", max_row_tab)
 
-        cur.execute("SELECT to_date(timestamp), close FROM ohlcv "
-                    "ORDER BY timestamp ASC")
+        cur.execute("SELECT timestamp, close FROM ohlcv ORDER BY timestamp ASC")
         records = cur.fetchall()
 
         cur.close()
@@ -69,10 +64,23 @@ def dataplot(records):
     print("Printing each row")
     print("\n")
     prices = [row[1] for row in records]
-    print("prices: ", prices)
+    #print("prices: ", prices)
     # dates = [datetime.fromtimestamp(row[0] // 1000) for row in records]  # místní čas
-    dates = [row[0] for row in records]  # místní čas
-    print('dates: ', dates)
+    dates = [datetime.fromtimestamp(row[0] // 1000) for row in records]  # místní čas
+    #print('dates: ', dates)
+
+    # Prepare a Pandas series object
+    data = pd.Series(prices, index=dates)
+    print('data: ', data)
+
+    set_matplotlib_formats('retina')
+
+    plt.style.use('seaborn-white')
+    plt.rcParams["figure.figsize"] = [15, 6]
+
+    # Draw a sipmle line chart
+    plt.plot(data)
+    plt.show()
 
     return
 
