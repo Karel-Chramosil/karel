@@ -206,6 +206,7 @@ class ESN():
             plt.imshow(extended_states.T, aspect='auto',
                        interpolation='nearest')
             plt.colorbar()
+            plt.show()
 
         if not self.silent:
             print("training error:")

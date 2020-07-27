@@ -86,7 +86,53 @@ def dataplot(records):
 
     return
 
-def dataprediction(records):
+def norma_prices(records):
+    """ normuje data na rozsah <0,1> a převede data na np.array. """
+    prices = [float(row[1]) for row in records]
+    # print("prices: ", prices)
+    max_price = max(prices)
+    min_price = min(prices)
+    print("max_price: ", max_price, "   min_price: ", min_price)
+    norma_prices = []
+    for x in prices:
+        norma_prices.append(x/(max_price + min_price))
+    # print("norma_prices: ", norma_prices)
+    # Prepare a Pandas series object
+    data = np.array(norma_prices)
+    # print('data: ', data)
+    return data, max_price, min_price
+
+def dataprediction(data, max_price, min_price,future, show, inspect):
+
+
+    trainlen = len(data) - future
+
+    pred_training = esn.fit(np.ones(trainlen), data[:trainlen], inspect)
+
+    prediction = esn.predict(np.ones(future))
+    testerror = np.sqrt(np.mean((prediction.flatten() - data[trainlen:trainlen + future]) ** 2)) * 100
+
+    if show:
+        print("test error: \n" + str(testerror), "%")
+        pred_training = pred_training * (max_price + min_price)
+        # print("pred_training: ", pred_training)
+        prediction = prediction * (max_price + min_price)
+        # print("prediction", prediction)
+        plt.figure(figsize=(11, 1.5))
+        plt.plot(range(0, trainlen + future), data[0:trainlen + future] * (max_price + min_price), 'k', label="target system")
+        plt.plot(range(trainlen, trainlen + future), prediction, 'r', label="free running ESN")
+        lo, hi = plt.ylim()
+        plt.plot([trainlen, trainlen], [lo + np.spacing(1), hi - np.spacing(1)], 'k:')
+        plt.legend(loc=(0.61, 1.1), fontsize='x-small')
+        plt.show()
+
+    return
+
+if __name__ == '__main__':
+    id = 'binance'
+    symbol = 'BTC/USDT'
+    lenData = 10000
+
     rng = np.random.RandomState(42)
     esn = ESN(n_inputs = 1,
               n_outputs = 1,
@@ -103,43 +149,14 @@ def dataprediction(records):
               out_activation = np.tanh,
               inverse_out_activation = np.arctanh,
               random_state = rng,
-              silent = False
+              silent = True
               )
 
-    prices = [float(row[1]) for row in records]
-    print("prices: ", prices)
-    max_price = max(prices)
-    min_price = min(prices)
-    print("max_price: ", max_price, "   min_price: ", min_price)
-    norma_prices = []
-    for x in prices:
-        norma_prices.append(x/(max_price + min_price))
-    print("norma_prices: ", norma_prices)
-    # Prepare a Pandas series object
-    data = np.array(norma_prices)
-    print('data: ', data)
 
-    trainlen = 25000
-    future = 10
-    pred_training = esn.fit(np.ones(trainlen), data[:trainlen])
-
-    prediction = esn.predict(np.ones(future))
-    print("test error: \n" + str(np.sqrt(np.mean((prediction.flatten() - data[trainlen:trainlen + future]) ** 2)) * 100), "%")
-
-    plt.figure(figsize=(11, 1.5))
-    plt.plot(range(0, trainlen + future), data[0:trainlen + future], 'k', label="target system")
-    plt.plot(range(trainlen, trainlen + future), prediction, 'r', label="free running ESN")
-    lo, hi = plt.ylim()
-    plt.plot([trainlen, trainlen], [lo + np.spacing(1), hi - np.spacing(1)], 'k:')
-    plt.legend(loc=(0.61, 1.1), fontsize='x-small')
-    plt.show()
-
-    return
-
-if __name__ == '__main__':
-    id = 'binance'
-    symbol = 'BTC/USDT'
-    lenData = 10000
     records = select_postgreSQL_ticker(lenData)
     # dataplot(records)
-    dataprediction(records)
+    data, max_price, min_price = norma_prices(records)
+    future = 30
+    inspect = False # optionally visualize the collected states
+    plotshow = True # visualize prediction
+    dataprediction(data, max_price, min_price, future, plotshow, inspect)
