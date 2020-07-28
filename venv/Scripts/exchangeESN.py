@@ -30,8 +30,8 @@ from pyESN import ESN
 root = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 sys.path.append(root + '/python')
 
-def select_postgreSQL_ticker(lenData):
-    """ Connect to the PostgreSQL tab tisker and read Data (number: lenData) """
+def select_postgreSQL_close():
+    """ Connect to the PostgreSQL tab ohlcv and read Data  """
     conn = None
     try:
         # read connection parameters
@@ -41,10 +41,10 @@ def select_postgreSQL_ticker(lenData):
         # create a cursor
         cur = conn.cursor()
 
-        cur.execute("SELECT count(*) FROM ohlcv")  # počet řádků tabulky ticker
-        result = cur.fetchone()
-        max_row_tab = result[0]
-        print("max_row_tab: ", max_row_tab)
+        # cur.execute("SELECT count(*) FROM ohlcv")  # počet řádků tabulky ticker
+        # result = cur.fetchone()
+        # max_row_tab = result[0]
+        # print("max_row_tab: ", max_row_tab)
 
         cur.execute("SELECT timestamp, close FROM ohlcv ORDER BY timestamp ASC")
         records = cur.fetchall()
@@ -60,6 +60,40 @@ def select_postgreSQL_ticker(lenData):
 
     return records
 
+def update_db_future(records, trainlen, prediction, future):
+    """ Connect to the PostgreSQL database server and update to tab ohlcv column future """
+    conn = None
+    try:
+        # read connection parameters
+        params = config()
+        conn = psycopg2.connect(**params)
+
+        # create a cursor
+        cur = conn.cursor()
+
+        print("prediction: ", prediction[0])
+        print("records: ", records[trainlen + 0][0])
+
+        exit()
+
+        i = 0
+        while i <= future // 2:
+            sql_ohlcv = ("UPDATE ohlcv SET future = %s WHERE timestamp = %s;")
+            # cur.execute(sql_ohlcv, prediction[i], records[trainlen + i][0])
+            # conn.commit()
+            i = i + 1
+
+        cur.close()
+
+    except (Exception, psycopg2.DatabaseError) as error:
+        print(error)
+    finally:
+        if conn is not None:
+            conn.close()
+            print('Database connection closed.')
+
+
+    return
 
 def dataplot(records):
     print("Total rows are:  ", len(records))
@@ -128,10 +162,26 @@ def dataprediction(data, max_price, min_price,future, show, inspect):
 
     return
 
+def futureprediction(records, data, fromrow, max_price, min_price, future):
+    datalen = len(data)
+    trainlen = fromrow - future
+
+    while trainlen <= datalen - future:
+        pred_training = esn.fit(np.ones(trainlen), data[:trainlen], inspect)
+        prediction = esn.predict(np.ones(future))
+        testerror = np.sqrt(np.mean((prediction.flatten() - data[trainlen:trainlen + future]) ** 2)) * 100
+        print("test error: " + str(testerror), "%")
+        # print("pred_training: ", pred_training)
+        print("prediction: ", prediction)
+        print("trainlen: ", trainlen)
+        update_db_future(records, trainlen, prediction, future)
+        trainlen = trainlen + (future // 2)
+
+    return
+
 if __name__ == '__main__':
     id = 'binance'
     symbol = 'BTC/USDT'
-    lenData = 10000
 
     rng = np.random.RandomState(42)
     esn = ESN(n_inputs = 1,
@@ -153,10 +203,12 @@ if __name__ == '__main__':
               )
 
 
-    records = select_postgreSQL_ticker(lenData)
+    records = select_postgreSQL_close()
     # dataplot(records)
     data, max_price, min_price = norma_prices(records)
     future = 30
     inspect = False # optionally visualize the collected states
     plotshow = True # visualize prediction
-    dataprediction(data, max_price, min_price, future, plotshow, inspect)
+    # dataprediction(data, max_price, min_price, future, plotshow, inspect)
+    fromrow = len(data) - 100  # 1920 = 80 * 24 hod => 80 dní
+    futureprediction(records, data, fromrow, max_price, min_price, future)
