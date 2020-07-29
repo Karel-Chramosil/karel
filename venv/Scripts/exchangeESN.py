@@ -60,7 +60,7 @@ def select_postgreSQL_close():
 
     return records
 
-def update_db_future(records, trainlen, prediction, future):
+def update_db_future(records, trlen, prediction, future):
     """ Connect to the PostgreSQL database server and update to tab ohlcv column future """
     conn = None
     try:
@@ -70,17 +70,18 @@ def update_db_future(records, trainlen, prediction, future):
 
         # create a cursor
         cur = conn.cursor()
-
-        print("prediction: ", prediction[0])
-        print("records: ", records[trainlen + 0][0])
-
-        exit()
-
-        i = 0
+        trlen = trlen - 1
+        i = 1
         while i <= future // 2:
-            sql_ohlcv = ("UPDATE ohlcv SET future = %s WHERE timestamp = %s;")
-            # cur.execute(sql_ohlcv, prediction[i], records[trainlen + i][0])
-            # conn.commit()
+            predic = prediction[i] * (max_price + min_price)
+            timestamp = int(records[(trlen + i)][0])
+            parama = tuple(predic)
+            paramb = parama + (timestamp,)  # Tuple
+            print("i: ", i, " trlen + i: ", trlen + i + 1, " paramb: ", paramb)
+            sql_ohlcv = ("UPDATE ohlcv SET future = %s WHERE timestamp = %s")
+            cur.execute(sql_ohlcv, paramb)
+            conn.commit()
+            # print("param: ", paramb)
             i = i + 1
 
         cur.close()
@@ -90,7 +91,7 @@ def update_db_future(records, trainlen, prediction, future):
     finally:
         if conn is not None:
             conn.close()
-            print('Database connection closed.')
+            # print('Database connection closed.')
 
 
     return
@@ -166,16 +167,20 @@ def futureprediction(records, data, fromrow, max_price, min_price, future):
     datalen = len(data)
     trainlen = fromrow - future
 
-    while trainlen <= datalen - future:
+    while trainlen <= datalen:
         pred_training = esn.fit(np.ones(trainlen), data[:trainlen], inspect)
         prediction = esn.predict(np.ones(future))
-        testerror = np.sqrt(np.mean((prediction.flatten() - data[trainlen:trainlen + future]) ** 2)) * 100
-        print("test error: " + str(testerror), "%")
-        # print("pred_training: ", pred_training)
-        print("prediction: ", prediction)
-        print("trainlen: ", trainlen)
+        if trainlen <= datalen - future:
+            testerror = np.sqrt(np.mean((prediction.flatten() - data[trainlen:trainlen + future]) ** 2)) * 100
+            print("test error: " + str(testerror), "%", "trainlen: ", trainlen)
+            trainlen = trainlen + (future // 2)
+        else:
+            if trainlen >= datalen - 1:
+                return
+            future = datalen - trainlen
+            trainlen = datalen - future
+
         update_db_future(records, trainlen, prediction, future)
-        trainlen = trainlen + (future // 2)
 
     return
 
