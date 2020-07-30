@@ -46,11 +46,10 @@ def select_postgreSQL_close():
         # max_row_tab = result[0]
         # print("max_row_tab: ", max_row_tab)
 
-        cur.execute("SELECT timestamp, close FROM ohlcv ORDER BY timestamp ASC")
+        cur.execute("SELECT timestamp, close, future FROM ohlcv ORDER BY timestamp ASC")
         records = cur.fetchall()
-
         cur.close()
-
+        # print("records: ", records)
     except (Exception, psycopg2.DatabaseError) as error:
         print(error)
     finally:
@@ -100,15 +99,21 @@ def dataplot(records):
     print("Total rows are:  ", len(records))
     print("Printing each row")
     print("\n")
+    print("records: ", records)
+
+
     prices = [row[1] for row in records]
+    volume = [row[2] for row in records]
     #print("prices: ", prices)
     # dates = [datetime.fromtimestamp(row[0] // 1000) for row in records]  # místní čas
     dates = [datetime.fromtimestamp(row[0] // 1000) for row in records]  # místní čas
     #print('dates: ', dates)
 
     # Prepare a Pandas series object
-    data = pd.Series(prices, index=dates)
-    print('data: ', data)
+    dataprices = pd.Series(prices, index=dates)
+    print('dataprices: ', dataprices)
+    datavolume = pd.Series(volume, index=dates)
+    print('datavolume: ', datavolume)
 
     set_matplotlib_formats('retina')
 
@@ -116,7 +121,9 @@ def dataplot(records):
     plt.rcParams["figure.figsize"] = [15, 6]
 
     # Draw a sipmle line chart
-    plt.plot(data)
+    plt.plot(dataprices)
+    plt.plot(datavolume)
+
     plt.show()
 
     return
@@ -209,11 +216,15 @@ if __name__ == '__main__':
 
 
     records = select_postgreSQL_close()
-    # dataplot(records)
+    dataplot(records)
+
+    #exit()
+
+
     data, max_price, min_price = norma_prices(records)
     future = 30
     inspect = False # optionally visualize the collected states
     plotshow = True # visualize prediction
     # dataprediction(data, max_price, min_price, future, plotshow, inspect)
-    fromrow = len(data) - 360  # 1920 = 80 * 24 hod => 80 dní
+    fromrow = len(data) - 160  # 1920 = 80 * 24 hod => 80 dní
     futureprediction(records, data, fromrow, max_price, min_price, future)
