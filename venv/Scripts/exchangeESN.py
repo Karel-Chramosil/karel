@@ -215,5 +215,5 @@ if __name__ == '__main__':
     inspect = False # optionally visualize the collected states
     plotshow = True # visualize prediction
     # dataprediction(data, max_price, min_price, future, plotshow, inspect)
-    fromrow = len(data) - 100  # 1920 = 80 * 24 hod => 80 dní
+    fromrow = len(data) - 360  # 1920 = 80 * 24 hod => 80 dní
     futureprediction(records, data, fromrow, max_price, min_price, future)
