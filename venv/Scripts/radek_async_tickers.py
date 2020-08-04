@@ -172,7 +172,8 @@ def read_tickers(id, symbol):
     run = True
     ticker_dic = asyncio.get_event_loop().run_until_complete(test(id, symbol))
     width = 60
-    series = [ticker_dic['bid'] + 1]
+    series_bid = [ticker_dic['bid'] + 1]
+    series_ask = [ticker_dic['ask'] + 1]
     j = 0
 
     try:
@@ -184,13 +185,16 @@ def read_tickers(id, symbol):
             if j < width:
                 j = j + 1
             else:
-                series.pop(0)
-            series.append(ticker_dic['bid'])
+                series_bid.pop(0)
+                series_ask.pop(0)
+            series_bid.append(ticker_dic['bid'])
+            series_ask.append(ticker_dic['bid'])
             print("\n")
-            print(colored(radek_asciichart.pplot(series), 'yellow'))
+            print(colored(radek_asciichart.pplot(series_bid, series_ask), 'yellow'))
             #print((radek_asciichart.pplot(series)))
-            print(colored('bid => ₿ = $ ','blue'), ticker_dic['bid'])
-            print("\n")
+            print(colored('bid => ₿ = $ ','yellow'), colored(ticker_dic['bid'], "yellow"),
+                  colored('              ask => ₿ = $ ','red'), colored(ticker_dic['ask'],'red'))
+            # print("\n")
     except Exception as e:
         print('Error: ', e)
     finally:
