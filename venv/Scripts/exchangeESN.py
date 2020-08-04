@@ -218,7 +218,7 @@ if __name__ == '__main__':
     records = select_postgreSQL_close()
     dataplot(records)
 
-    #exit()
+    exit()
 
     # Předpověď dat
     data, max_price, min_price = norma_prices(records)
