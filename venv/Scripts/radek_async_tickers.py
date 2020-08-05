@@ -191,7 +191,6 @@ def read_tickers(id, symbol):
             series_ask.append(ticker_dic['bid'])
             print("\n")
             print(colored(radek_asciichart.pplot(series_bid, series_ask), 'yellow'))
-            #print((radek_asciichart.pplot(series)))
             print(colored('bid => ₿ = $ ','yellow'), colored(ticker_dic['bid'], "yellow"),
                   colored('              ask => ₿ = $ ','red'), colored(ticker_dic['ask'],'red'))
             # print("\n")

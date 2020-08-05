@@ -32,7 +32,7 @@ def read_ohlcv(symbol):
         print("exchange: ", exchange)
 
         # from_datetime = '2017-01-01 00:00:00'
-        from_datetime = '2017-01-01 00:00:00'
+        from_datetime = '2020-08-04 00:00:00'
         from_timestamp = exchange.parse8601(from_datetime)
         #
         # print("from_timestamp: ", from_timestamp)
@@ -100,13 +100,20 @@ def insert_postgreSQL_ohlcv(data):
         # create a cursor
         cur = conn.cursor()
 
+        cur.execute("SELECT MAX(timestamp) FROM ohlcv")  # poslední datum záznamu
+        result = cur.fetchone()
+        timestamp_max = result[0]
+        print("timestamp_max: ", timestamp_max)
+
+
         i = 0
         while i <= len(data):
-            data_ohlcv = (data[i][0], data[i][1], data[i][2], data[i][3], data[i][4], data[i][5])
-            print(data_ohlcv)
-            sql_ohlcv = ("INSERT INTO ohlcv (timestamp, open, high, low, close, volume) VALUES (%s, %s, %s, %s, %s, %s) ;")
-            cur.execute(sql_ohlcv, data_ohlcv)
-            conn.commit()
+            if data[i][0] > timestamp_max:
+                data_ohlcv = (data[i][0], data[i][1], data[i][2], data[i][3], data[i][4], data[i][5])
+                print(data_ohlcv)
+                sql_ohlcv = ("INSERT INTO ohlcv (timestamp, open, high, low, close, volume) VALUES (%s, %s, %s, %s, %s, %s) ;")
+                cur.execute(sql_ohlcv, data_ohlcv)
+                conn.commit()
             i = i + 1
 
         cur.close()
