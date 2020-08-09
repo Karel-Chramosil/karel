@@ -103,7 +103,7 @@ def dataplot(records):
 
 
     prices = [row[1] for row in records]
-    volume = [row[2] for row in records]
+    future = [row[2] for row in records]
     #print("prices: ", prices)
     # dates = [datetime.fromtimestamp(row[0] // 1000) for row in records]  # místní čas
     dates = [datetime.fromtimestamp(row[0] // 1000) for row in records]  # místní čas
@@ -112,7 +112,7 @@ def dataplot(records):
     # Prepare a Pandas series object
     dataprices = pd.Series(prices, index=dates)
     print('dataprices: ', dataprices)
-    datavolume = pd.Series(volume, index=dates)
+    datavolume = pd.Series(future, index=dates)
     print('datavolume: ', datavolume)
 
     set_matplotlib_formats('retina')
@@ -216,15 +216,17 @@ if __name__ == '__main__':
 
 
     records = select_postgreSQL_close()
+    print("type records: ", type(records))
+    print("records: ", records)
     dataplot(records)
 
-    exit()
+    # exit()
 
     # Předpověď dat
     data, max_price, min_price = norma_prices(records)
     future = 30 # na třicet dní, ukládám 15 dní
     inspect = False # optionally visualize the collected states
     plotshow = True # visualize prediction
-    # dataprediction(data, max_price, min_price, future, plotshow, inspect)
-    fromrow = len(data) - 160  # 1920 = 80 * 24 hod => 80 dní zpětně !!!!!!!!!!
-    futureprediction(records, data, fromrow, max_price, min_price, future)
+    fromrow = len(data) - 200  # 1920 = 80 * 24 hod => 80 dní zpětně !!!!!!!!!!
+    # futureprediction(records, data, fromrow, max_price, min_price, future)
+    dataprediction(data, max_price, min_price, future, plotshow, inspect)
