@@ -147,22 +147,24 @@ def norma_prices(records):
 def dataprediction(data, max_price, min_price,future, show, inspect):
 
 
-    trainlen = len(data) - future
+    # trainlen = len(data) - future
+    trainlen = len(data)
 
     pred_training = esn.fit(np.ones(trainlen), data[:trainlen], inspect)
 
     prediction = esn.predict(np.ones(future))
-    testerror = np.sqrt(np.mean((prediction.flatten() - data[trainlen:trainlen + future]) ** 2)) * 100
+    # testerror = np.sqrt(np.mean((prediction.flatten() - data[trainlen:trainlen + future]) ** 2)) * 100
 
     if show:
-        print("test error: \n" + str(testerror), "%")
+        # print("test error: \n" + str(testerror), "%")
         pred_training = pred_training * (max_price + min_price)
         # print("pred_training: ", pred_training)
         prediction = prediction * (max_price + min_price)
-        # print("prediction", prediction)
+        print("prediction", prediction)
         plt.figure(figsize=(11, 1.5))
-        plt.plot(range(0, trainlen + future), data[0:trainlen + future] * (max_price + min_price), 'k', label="target system")
-        plt.plot(range(trainlen, trainlen + future), prediction, 'r', label="free running ESN")
+        # plt.plot(range(0, trainlen + future), data[0:trainlen + future] * (max_price + min_price), 'k', label="target system")
+        plt.plot(range(0, trainlen), data[0:trainlen] * (max_price + min_price), 'blue', label="target system")
+        plt.plot(range(trainlen, trainlen + future), prediction, 'red', label="free running ESN")
         lo, hi = plt.ylim()
         plt.plot([trainlen, trainlen], [lo + np.spacing(1), hi - np.spacing(1)], 'k:')
         plt.legend(loc=(0.61, 1.1), fontsize='x-small')
@@ -216,8 +218,8 @@ if __name__ == '__main__':
 
 
     records = select_postgreSQL_close()
-    print("type records: ", type(records))
-    print("records: ", records)
+    # print("type records: ", type(records))
+    # print("records: ", records)
     dataplot(records)
 
     # exit()
@@ -227,6 +229,7 @@ if __name__ == '__main__':
     future = 30 # na třicet dní, ukládám 15 dní
     inspect = False # optionally visualize the collected states
     plotshow = True # visualize prediction
-    fromrow = len(data) - 200  # 1920 = 80 * 24 hod => 80 dní zpětně !!!!!!!!!!
+    fromrow = len(data) - 100  # 1920 = 80 * 24 hod => 80 dní zpětně !!!!!!!!!!
     # futureprediction(records, data, fromrow, max_price, min_price, future)
+    future = 30
     dataprediction(data, max_price, min_price, future, plotshow, inspect)
