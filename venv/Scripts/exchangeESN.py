@@ -233,3 +233,4 @@ if __name__ == '__main__':
     # futureprediction(records, data, fromrow, max_price, min_price, future)
     future = 30
     dataprediction(data, max_price, min_price, future, plotshow, inspect)
+
